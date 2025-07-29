@@ -101,30 +101,33 @@ def handle_statement(prompt):
             return
         return
     
-        match = re.match(r"(\w+) and (\w+) are siblings", prompt)
+    match = re.match(r"(\w+) and (\w+) are siblings", prompt)
     if match:
         add_fact(f"sibling({match.group(1).lower()},{match.group(2).lower()})")
         add_fact(f"sibling({match.group(2).lower()},{match.group(1).lower()})")
         return
 
-    match = re.match(r"(\w+) is a brother of (\w+)", prompt)
+    match = re.match(r"(\w+) is a (brother|sister) of (\w+)", prompt, re.IGNORECASE)
     if match:
-        try:
-            assert_gender(match.group(1).lower(), "male")
-            add_fact(f"brother({match.group(1).lower()},{match.group(2).lower()})")
-        except ValueError as e:
-            print("That’s impossible!")
-            return
-        return
+        sibling1 = match.group(1).lower()
+        relation = match.group(2).lower()
+        sibling2 = match.group(3).lower()
 
-    match = re.match(r"(\w+) is a sister of (\w+)", prompt)
-    if match:
         try:
-            assert_gender(match.group(1).lower(), "female")
-            add_fact(f"sister({match.group(1).lower()},{match.group(2).lower()})")
-        except ValueError as e:
-            print("That’s impossible!")
-            return
+            if relation == "brother":
+                assert_gender(sibling1, "male")
+                add_multiFact(f"brother({sibling1},{sibling2})")
+            else:
+                assert_gender(sibling1, "female")
+                add_multiFact(f"sister({sibling1},{sibling2})")
+
+            # Add symmetric sibling facts regardless of gender
+            add_multiFact(f"sibling({sibling1},{sibling2})")
+            add_multiFact(f"sibling({sibling2},{sibling1})")
+
+            print("OK! I learned something.")
+        except ValueError as ve:
+            print(ve)
         return
 
     match = re.match(r"(\w+) and (\w+) are the parents of (\w+)", prompt)
