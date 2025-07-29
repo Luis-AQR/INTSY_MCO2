@@ -33,6 +33,34 @@ def add_fact(statement):
     except Exception:
         print("That’s impossible!")
 
+def add_multiFact(statement):
+    try:
+        # handles mother father rs
+        match = re.match(r"(father|mother|son|daughter|brother|sister|child|uncle|aunt)\((\w+),(\w+)\)", statement)
+        if match:
+            relation, a, b = match.groups()
+            if a == b:
+                raise ValueError("Self-reference detected.")
+
+            # handles ancestry
+            if relation in ["father", "mother", "son", "daughter", "child"]:
+                if list(prolog.query(f"ancestor({b},{a})")):
+                    raise ValueError("Circular ancestry detected.")
+
+        # handles gender
+        if statement.startswith("female("):
+            name = re.match(r"female\((\w+)\)", statement).group(1)
+            if list(prolog.query(f"male({name})")):
+                raise ValueError("Gender contradiction: already male.")
+        elif statement.startswith("male("):
+            name = re.match(r"male\((\w+)\)", statement).group(1)
+            if list(prolog.query(f"female({name})")):
+                raise ValueError("Gender contradiction: already female.")
+
+        prolog.assertz(statement)
+    except Exception:
+        print("That’s impossible!")
+
 def ensure_gender_known(name: str, expected_gender: str):
     """Ask user for gender if not already known."""
     name = name.lower()
@@ -49,7 +77,7 @@ def ensure_gender_known(name: str, expected_gender: str):
                 break
             else:
                 print("Invalid input. Please enter 'male' or 'female'.")
-
+    
 def handle_statement(prompt):
     prompt = prompt.strip('.')
 
@@ -127,21 +155,24 @@ def handle_statement(prompt):
         add_fact(f"child({match.group(3).lower()},{match.group(4).lower()})")
         return
 
-    match = re.match(r"(\w+) is a daughter of (\w+)", prompt)
+    match = re.match(r"(\w+) is a (son|daughter) of (\w+)", prompt, re.IGNORECASE)
     if match:
-        try:
-            assert_gender(match.group(1).lower(), "female")
-            add_fact(f"daughter({match.group(1).lower()},{match.group(2).lower()})")
-        except ValueError as e:
-            print("That’s impossible!")
-            return
-        return
+        child = match.group(1).lower()
+        relation = match.group(2).lower()
+        parent = match.group(3).lower()
 
-    match = re.match(r"(\w+) is a son of (\w+)", prompt)
-    if match:
         try:
-            assert_gender(match.group(1).lower(), "male")
-            add_fact(f"son({match.group(1).lower()},{match.group(2).lower()})")
+            if relation == "son":
+                assert_gender(child, "male")
+                add_multiFact(f"son({child},{parent})")
+                add_multiFact(f"child({child},{parent})")
+                add_multiFact(f"father({parent},{child})")
+            elif relation == "daughter":
+                assert_gender(child, "female")
+                add_multiFact(f"daughter({child},{parent})")
+                add_multiFact(f"child({child},{parent})")
+                add_multiFact(f"mother({parent},{child})")
+            print("OK! I learned something.")
         except ValueError as e:
             print("That’s impossible!")
             return

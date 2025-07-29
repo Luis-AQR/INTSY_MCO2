@@ -29,14 +29,11 @@ sister(X, Y) :- female(X), sibling(X, Y).
 son(X, Y) :- male(X), child(X, Y).
 daughter(X, Y) :- female(X), child(X, Y).
 
-% Aunts and uncles
 uncle(X, Y) :- male(X), sibling(X, Z), parent(Z, Y).
 aunt(X, Y) :- female(X), sibling(X, Z), parent(Z, Y).
 
-% Parents from both sides
 parents(X, Y, Z) :- father(Y, X), mother(Z, X).
 
-% Ancestors
 ancestor(X, Y) :- parent(X, Y).
 ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
 
