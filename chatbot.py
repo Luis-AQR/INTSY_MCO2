@@ -33,6 +33,22 @@ def add_fact(statement):
     except Exception:
         print("That’s impossible!")
 
+def ensure_gender_known(name: str, expected_gender: str):
+    """Ask user for gender if not already known."""
+    name = name.lower()
+    known_male = list(prolog.query(f"male({name})"))
+    known_female = list(prolog.query(f"female({name})"))
+
+    if not known_male and not known_female:
+        while True:
+            user_input = input(f"{name.capitalize()}'s gender is unknown. Please enter gender (male/female): ").strip().lower()
+            if user_input in {"male", "female"}:
+                if user_input != expected_gender:
+                    print(f"Warning: You indicated {name.capitalize()} is {user_input}, but the question implies {expected_gender}.")
+                prolog.assertz(f"{user_input}({name})")
+                break
+            else:
+                print("Invalid input. Please enter 'male' or 'female'.")
 
 def handle_statement(prompt):
     prompt = prompt.strip('.')
@@ -176,6 +192,62 @@ def handle_statement(prompt):
 def handle_question(prompt):
     prompt = prompt.strip('?')
 
+    match = re.match(r"Is (\w+) a daughter of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "female")
+        result = list(prolog.query(f"daughter({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) a son of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "male")
+        result = list(prolog.query(f"son({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) a sister of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "female")
+        result = list(prolog.query(f"sister({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) a brother of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "male")
+        result = list(prolog.query(f"brother({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) an aunt of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "female")
+        result = list(prolog.query(f"aunt({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) an uncle of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "male")
+        result = list(prolog.query(f"uncle({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) a grandmother of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "female")
+        result = list(prolog.query(f"grandmother({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
+    match = re.match(r"Is (\w+) a grandfather of (\w+)", prompt, re.IGNORECASE)
+    if match:
+        ensure_gender_known(match.group(1), "male")
+        result = list(prolog.query(f"grandfather({match.group(1).lower()},{match.group(2).lower()})"))
+        print("Yes!" if result else "No.")
+        return
+
     match = re.match(r"Are (\w+) and (\w+) siblings", prompt, re.IGNORECASE)
     if match:
         res1 = list(prolog.query(f"sibling({match.group(1).lower()},{match.group(2).lower()})"))
@@ -189,22 +261,10 @@ def handle_question(prompt):
         print("Siblings:", ", ".join(sorted({r["X"].capitalize() for r in result})) if result else "None found.")
         return
 
-    match = re.match(r"Is (\w+) a sister of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"sister({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
-        return
-
     match = re.match(r"Who are the sisters of (\w+)", prompt, re.IGNORECASE)
     if match:
         result = list(prolog.query(f"sister(X,{match.group(1).lower()})"))
         print("Sisters:", ", ".join(sorted({r["X"].capitalize() for r in result})) if result else "None found.")
-        return
-
-    match = re.match(r"Is (\w+) a brother of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"brother({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
         return
 
     match = re.match(r"Who are the brothers of (\w+)", prompt, re.IGNORECASE)
@@ -253,34 +313,10 @@ def handle_question(prompt):
         print("Parents:", ", ".join(parents) if parents else "None found.")
         return
 
-    match = re.match(r"Is (\w+) a grandmother of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"grandmother({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
-        return
-
-    match = re.match(r"Is (\w+) a grandfather of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"grandfather({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
-        return
-
-    match = re.match(r"Is (\w+) a daughter of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"daughter({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
-        return
-
     match = re.match(r"Who are the daughters of (\w+)", prompt, re.IGNORECASE)
     if match:
         result = list(prolog.query(f"daughter(X,{match.group(1).lower()})"))
         print("Daughters:", ", ".join(sorted({r["X"].capitalize() for r in result})) if result else "None found.")
-        return
-
-    match = re.match(r"Is (\w+) a son of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"son({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
         return
 
     match = re.match(r"Who are the sons of (\w+)", prompt, re.IGNORECASE)
@@ -306,18 +342,6 @@ def handle_question(prompt):
         c1, c2, c3, parent = match.groups()
         all_found = all(list(prolog.query(f"child({child.lower()},{parent.lower()})")) for child in (c1, c2, c3))
         print("Yes!" if all_found else "No.")
-        return
-
-    match = re.match(r"Is (\w+) an aunt of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"aunt({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
-        return
-
-    match = re.match(r"Is (\w+) an uncle of (\w+)", prompt, re.IGNORECASE)
-    if match:
-        result = list(prolog.query(f"uncle({match.group(1).lower()},{match.group(2).lower()})"))
-        print("Yes!" if result else "No.")
         return
 
     match = re.match(r"Are (\w+) and (\w+) relatives", prompt, re.IGNORECASE)
