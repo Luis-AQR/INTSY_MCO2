@@ -103,8 +103,13 @@ def handle_statement(prompt):
     
     match = re.match(r"(\w+) and (\w+) are siblings", prompt)
     if match:
-        add_fact(f"sibling({match.group(1).lower()},{match.group(2).lower()})")
-        add_fact(f"sibling({match.group(2).lower()},{match.group(1).lower()})")
+        try:
+            add_multiFact(f"sibling({match.group(1).lower()},{match.group(2).lower()})")
+            add_multiFact(f"sibling({match.group(2).lower()},{match.group(1).lower()})")
+            print("OK! I learned something.")
+        except ValueError as e:
+            print("That’s impossible!")
+            return
         return
 
     match = re.match(r"(\w+) is a (brother|sister) of (\w+)", prompt, re.IGNORECASE)
@@ -153,9 +158,13 @@ def handle_statement(prompt):
 
     match = re.match(r"(\w+), (\w+) and (\w+) are children of (\w+)", prompt)
     if match:
-        add_fact(f"child({match.group(1).lower()},{match.group(4).lower()})")
-        add_fact(f"child({match.group(2).lower()},{match.group(4).lower()})")
-        add_fact(f"child({match.group(3).lower()},{match.group(4).lower()})")
+        try:
+            add_multiFact(f"child({match.group(1).lower()},{match.group(4).lower()})")
+            add_multiFact(f"child({match.group(2).lower()},{match.group(4).lower()})")
+            add_multiFact(f"child({match.group(3).lower()},{match.group(4).lower()})")
+        except ValueError as e:
+            print("That’s impossible!")
+            return
         return
 
     match = re.match(r"(\w+) is a (son|daughter) of (\w+)", prompt, re.IGNORECASE)
